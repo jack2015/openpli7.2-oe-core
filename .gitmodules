@@ -10,3 +10,4 @@
 	path = bitbake
 	url = git://git.openembedded.org/bitbake
 	ignore = dirty
+	
