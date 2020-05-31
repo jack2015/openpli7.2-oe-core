@@ -1,4 +1,31 @@
 #!/usr/bin/make -f
+#
+# Copyright (c) 2010-2012 Dream Multimedia GmbH, Germany
+#                         http://www.dream-multimedia-tv.de/
+# Copyright (c) 2012-2017 PLi Association, The Netherlands
+#                         http://openpli.org
+# Authors:
+#   Andreas Oberritter <obi@opendreambox.org>
+#   OpenPLi development team
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+# 
 
 # Adjust according to the number CPU cores to use for parallel build.
 # Default: Number of processors in /proc/cpuinfo, if present, or 1.
@@ -24,18 +51,18 @@ BBLAYERS ?= \
 	$(CURDIR)/meta-openembedded/meta-webserver \
 	$(CURDIR)/openembedded-core/meta \
 	$(CURDIR)/meta-openpli \
-	$(CURDIR)/meta-qt5
+	$(CURDIR)/meta-dream
 
 CONFFILES = \
 	$(TOPDIR)/env.source \
-	$(TOPDIR)/conf/openvision.conf \
+	$(TOPDIR)/conf/openpli.conf \
 	$(TOPDIR)/conf/bblayers.conf \
 	$(TOPDIR)/conf/local.conf \
 	$(TOPDIR)/conf/site.conf
 
 CONFDEPS = \
 	$(DEPDIR)/.env.source.$(BITBAKE_ENV_HASH) \
-	$(DEPDIR)/.openvision.conf.$(OPENPLI_CONF_HASH) \
+	$(DEPDIR)/.openpli.conf.$(OPENPLI_CONF_HASH) \
 	$(DEPDIR)/.bblayers.conf.$(BBLAYERS_CONF_HASH) \
 	$(DEPDIR)/.local.conf.$(LOCAL_CONF_HASH)
 
@@ -50,8 +77,22 @@ hash = $(shell echo $(1) | $(XSUM) | awk '{print $$1}')
 .DEFAULT_GOAL := all
 all: init
 	@echo
-	@echo "OE for Open Vision $(GIT_BRANCH) environment has been initialized properly."
-	@echo "Now you can start building your image by using image.sh"
+	@echo "Openembedded for the OpenPLi $(GIT_BRANCH) environment has been initialized"
+	@echo "properly. Now you can start building your image, by doing either:"
+	@echo
+	@echo " MACHINE=... make image"
+	@echo
+	@echo "	or:"
+	@echo
+	@echo " cd $(BUILD_DIR)"
+	@echo " source env.source"
+	@echo " MACHINE=... bitbake openpli-enigma2-image"
+	@echo
+	@echo "	or, if you want to build not just the image, but the optional packages in the feed as well:"
+	@echo
+	@echo " MACHINE=... make feed"
+	@echo "	or:"
+	@echo " MACHINE=... bitbake openpli-enigma2-feed"
 	@echo
 
 $(BBLAYERS):
@@ -62,16 +103,12 @@ initialize: init
 init: $(BBLAYERS) $(CONFFILES)
 
 image: init
-	@echo 'Building image for $(MACHINE)$(DMTYPE)'
-	@. $(TOPDIR)/env.source && cd $(TOPDIR) && bitbake openvision-enigma2-image
+	@echo 'Building image for $(MACHINE)'
+	@. $(TOPDIR)/env.source && cd $(TOPDIR) && bitbake openpli-enigma2-image
 
 feed: init
-	@echo 'Building feed for $(MACHINE)$(DMTYPE)'
-	@. $(TOPDIR)/env.source && cd $(TOPDIR) && bitbake openvision-enigma2-feed
-
-kernel-clean: init
-	@echo 'Cleanup kernel for $(MACHINE)$(DMTYPE)'
-	@. $(TOPDIR)/env.source && cd $(TOPDIR) && bitbake -c clean virtual/kernel
+	@echo 'Building feed for $(MACHINE)'
+	@. $(TOPDIR)/env.source && cd $(TOPDIR) && bitbake openpli-enigma2-feed
 
 update:
 	@echo 'Updating Git repositories...'
@@ -85,7 +122,7 @@ update:
 	else \
 		$(GIT) submodule sync && \
 		$(GIT) submodule update --init && \
-		echo "The Open Vision OE is now up-to-date."; \
+		echo "The openpli OE is now up-to-date."; \
 	fi
 
 .PHONY: all image init initialize update usage
@@ -97,10 +134,8 @@ BITBAKE_ENV_HASH := $(call hash, \
 
 $(TOPDIR)/env.source: $(DEPDIR)/.env.source.$(BITBAKE_ENV_HASH)
 	@echo 'Generating $@'
-	@echo 'export BB_ENV_EXTRAWHITE="MACHINE DMTYPE BOX_BRAND"' > $@
+	@echo 'export BB_ENV_EXTRAWHITE="MACHINE"' > $@
 	@echo 'export MACHINE' >> $@
-	@echo 'export DMTYPE' >> $@
-	@echo 'export BOX_BRAND' >> $@
 	@echo 'export PATH=$(CURDIR)/openembedded-core/scripts:$(CURDIR)/bitbake/bin:$${PATH}' >> $@
 	@echo 'export BUILDDIR=$(BUILD_DIR)' >> $@
 
@@ -114,15 +149,15 @@ OPENPLI_CONF_HASH := $(call hash, \
 	'TMPDIR = "$(TMPDIR)"' \
 	)
 
-$(TOPDIR)/conf/openvision.conf: $(DEPDIR)/.openvision.conf.$(OPENPLI_CONF_HASH)
+$(TOPDIR)/conf/openpli.conf: $(DEPDIR)/.openpli.conf.$(OPENPLI_CONF_HASH)
 	@echo 'Generating $@'
 	@test -d $(@D) || mkdir -p $(@D)
 	@echo 'SSTATE_DIR = "$(SSTATE_DIR)"' >> $@
 	@echo 'TMPDIR = "$(TMPDIR)"' >> $@
-	@echo 'BB_GENERATE_MIRROR_TARBALLS = "1"' >> $@
+	@echo 'BB_GENERATE_MIRROR_TARBALLS = "0"' >> $@
 	@echo 'BBINCLUDELOGS = "yes"' >> $@
 	@echo 'CONF_VERSION = "1"' >> $@
-	@echo 'DISTRO = "openvision"' >> $@
+	@echo 'DISTRO = "openpli"' >> $@
 	@echo 'EXTRA_IMAGE_FEATURES = "debug-tweaks"' >> $@
 	@echo 'USER_CLASSES = "buildstats"' >> $@
 
@@ -136,9 +171,7 @@ $(TOPDIR)/conf/local.conf: $(DEPDIR)/.local.conf.$(LOCAL_CONF_HASH)
 	@echo 'Generating $@'
 	@test -d $(@D) || mkdir -p $(@D)
 	@echo 'TOPDIR = "$(TOPDIR)"' > $@
-	@echo 'require $(TOPDIR)/conf/openvision.conf' >> $@
-	@echo 'SOURCE_MIRROR_URL ?= "file://$(DL_DIR)/"' >> $@
-	@echo 'INHERIT += "own-mirrors"' >> $@
+	@echo 'require $(TOPDIR)/conf/openpli.conf' >> $@
 
 $(TOPDIR)/conf/site.conf: $(CURDIR)/site.conf
 	@ln -s ../../site.conf $@
@@ -169,9 +202,3 @@ $(CONFDEPS):
 	@test -d $(@D) || mkdir -p $(@D)
 	@$(RM) $(basename $@).*
 	@touch $@
-
-ifeq ($(MACHINE),dm7020hdv2)
-MACHINE=dm7020hd
-DMTYPE=v2
-endif
-export DMTYPE

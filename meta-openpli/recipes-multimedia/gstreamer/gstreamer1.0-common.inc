@@ -9,10 +9,10 @@ UPSTREAM_CHECK_GITTAGREGEX = "(?P<pver>(\d+(\.\d+)+))"
 SRCREV_FORMAT = "base"
 
 inherit gitpkgv
-PV = "1.14.4+git${SRCPV}"
-PKGV = "1.14.4+git${GITPKGV}"
+PV = "1.17.0.1+git${SRCPV}"
+PKGV = "1.17.0.1+git${GITPKGV}"
 
-GST_BRANCH ?= "1.14"
+GST_BRANCH ?= "master"
 
 do_configure_prepend() {
 	cd ${S}

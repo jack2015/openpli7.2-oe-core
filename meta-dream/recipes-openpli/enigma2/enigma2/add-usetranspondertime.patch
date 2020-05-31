@@ -1,0 +1,47 @@
+Index: ./data/setup.xml
+--- a/data/setup.xml
++++ b/data/setup.xml
+@@ -1,6 +1,7 @@
+ <setupxml>
+ 	<setup key="timezone" title="Timezone">
+ 		<item level="0" text="Timezone">config.timezone.val</item>
++		<item level="1" text="Use transponder time">config.misc.useTransponderTime</item>
+ 	</setup>
+ 	<setup key="avsetup">
+ 		<!-- this is just a placeholder, the Videomode plugin implements this submenu -->
+Index: ./lib/python/Components/SystemInfo.py
+--- a/lib/python/Components/SystemInfo.py
++++ b/lib/python/Components/SystemInfo.py
+@@ -85,9 +85,9 @@
+ SystemInfo["HasHdrType"] = fileCheck("/proc/stb/video/hdmi_hdrtype")
+ SystemInfo["HasHDMI-CEC"] = HardwareInfo().has_hdmi() and fileExists("/usr/lib/enigma2/python/Plugins/SystemPlugins/HdmiCEC/plugin.pyo") and (fileExists("/dev/cec0") or fileExists("/dev/hdmi_cec") or fileExists("/dev/misc/hdmi_cec0"))
+ SystemInfo["HasYPbPr"] = HardwareInfo().get_device_model() in ("dm8000", "et5000", "et6000", "et6500", "et9000", "et9200", "et9500", "et10000", "formuler1", "mbtwinplus", "spycat", "vusolo", "vuduo", "vuduo2", "vuultimo")
+-SystemInfo["HasScart"] = HardwareInfo().get_device_model() in ("dm8000", "et4000", "et6500", "et8000", "et9000", "et9200", "et9500", "et10000", "formuler1", "hd1100", "hd1200", "hd1265", "hd2400", "vusolo", "vusolo2", "vuduo", "vuduo2", "vuultimo", "vuuno", "xp1000")
++SystemInfo["HasScart"] = HardwareInfo().get_device_model() in ("dm800", "dm800se", "dm800sev2", "dm8000", "et4000", "et6500", "et8000", "et9000", "et9200", "et9500", "et10000", "formuler1", "hd1100", "hd1200", "hd1265", "hd2400", "vusolo", "vusolo2", "vuduo", "vuduo2", "vuultimo", "vuuno", "xp1000")
+ SystemInfo["HasSVideo"] = HardwareInfo().get_device_model() in ("dm8000")
+-SystemInfo["HasComposite"] = HardwareInfo().get_device_model() not in ("i55", "gbquad4k", "gbue4k", "hd1500", "osnino", "osninoplus", "purehd", "purehdse", "revo4k", "vusolo4k", "vuzero4k")
++SystemInfo["HasComposite"] = HardwareInfo().get_device_model() not in ("dm900", "dm920", "i55", "gbquad4k", "gbue4k", "hd1500", "osnino", "osninoplus", "purehd", "purehdse", "revo4k", "vusolo4k", "vuzero4k")
+ SystemInfo["HasAutoVolume"] = fileExists("/proc/stb/audio/avl_choices") and fileCheck("/proc/stb/audio/avl")
+ SystemInfo["HasAutoVolumeLevel"] = fileExists("/proc/stb/audio/autovolumelevel_choices") and fileCheck("/proc/stb/audio/autovolumelevel")
+ SystemInfo["Has3DSurround"] = fileExists("/proc/stb/audio/3d_surround_choices") and fileCheck("/proc/stb/audio/3d_surround")
+Index: ./lib/python/Components/UsageConfig.py
+--- a/lib/python/Components/UsageConfig.py
++++ b/lib/python/Components/UsageConfig.py
+@@ -131,7 +131,7 @@
+ 	config.usage.leave_movieplayer_onExit = ConfigSelection(default = "popup", choices = [
+ 		("no", _("no")), ("popup", _("With popup")), ("without popup", _("Without popup")), ("movielist", _("Return to movie list")) ])
+ 
+-	config.usage.setup_level = ConfigSelection(default = "simple", choices = [
++	config.usage.setup_level = ConfigSelection(default = "expert", choices = [
+ 		("simple", _("Normal")),
+ 		("intermediate", _("Advanced")),
+ 		("expert", _("Expert")) ])
+@@ -288,7 +288,7 @@
+ 	SystemInfo["DVB-C_priority_tuner_available"] = len(dvbc_nims) > 3 and any(len(i) > 2 for i in (dvbs_nims, dvbt_nims, atsc_nims))
+ 	SystemInfo["ATSC_priority_tuner_available"] = len(atsc_nims) > 3 and any(len(i) > 2 for i in (dvbs_nims, dvbc_nims, dvbt_nims))
+ 
+-	config.misc.disable_background_scan = ConfigYesNo(default = False)
++	config.misc.disable_background_scan = ConfigYesNo(default = True)
+ 	config.misc.use_ci_assignment = ConfigYesNo(default = False)
+ 	config.usage.show_event_progress_in_servicelist = ConfigSelection(default = 'barright', choices = [
+ 		('barleft', _("Progress bar left")),

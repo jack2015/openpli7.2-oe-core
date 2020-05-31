@@ -1,0 +1,88 @@
+diff --git a/data/menu.xml b/data/menu.xml
+index afd718c96..45006d9d9 100644
+--- a/data/menu.xml
++++ b/data/menu.xml
+@@ -104,5 +104,6 @@ self.session.openWithCallback(msgClosed, FactoryReset)
+			<item text="Restart enigma in debug mode" requires="!InDebugMode" entryID="restart_enigma_debug"><screen module="Standby" screen="TryQuitMainloop">6</screen></item>
+ 			<item text="Deep standby" requires="DeepstandbySupport" entryID="deep_standby"><screen module="Standby" screen="TryQuitMainloop">1</screen></item>
+ 			<item text="Shutdown" requires="!DeepstandbySupport" entryID="deep_standby"><screen module="Standby" screen="TryQuitMainloop">1</screen></item>
++			<item text="Recovery Mode" requires="RecoveryMode" entryID="maintenance_mode"><screen module="Standby" screen="TryQuitMainloop">16</screen></item>
+ 		</menu>
+ </menu>
+diff --git a/lib/python/Components/Lcd.py b/lib/python/Components/Lcd.py
+index c40efa2b0..55ba60f99 100644
+--- a/lib/python/Components/Lcd.py
++++ b/lib/python/Components/Lcd.py
+@@ -3,6 +3,7 @@ from enigma import eDBoxLCD
+ from Components.SystemInfo import SystemInfo
+ from Screens.InfoBar import InfoBar
+ from Screens.Screen import Screen
++from enigma import getBoxType
+ 
+ class dummyScreen(Screen):
+ 	skin = """<screen position="0,0" size="0,0" transparent="1">
+@@ -74,7 +74,10 @@ def InitLcd():
+ 			config.lcd.contrast.addNotifier(setLCDcontrast);
+ 		else:
+ 			config.lcd.contrast = ConfigNothing()
+-			standby_default = 1
++			if getBoxType() in ('dm900','dm920'):
++				standby_default = 4
++			else:
++				standby_default = 1
+ 
+ 		config.lcd.standby = ConfigSlider(default=standby_default, limits=(0, 10))
+ 		config.lcd.standby.addNotifier(setLCDbright);
+diff --git a/lib/python/Components/SystemInfo.py b/lib/python/Components/SystemInfo.py
+index d1dde4bcd..097e31805 100644
+--- a/lib/python/Components/SystemInfo.py
++++ b/lib/python/Components/SystemInfo.py
+@@ -105,3 +105,4 @@ SystemInfo["CanDownmixAC3"] = fileHas("/proc/stb/audio/ac3_choices", "downmix")
+ SystemInfo["CanDownmixDTS"] = fileHas("/proc/stb/audio/dts_choices", "downmix")
+ SystemInfo["CanDownmixAAC"] = fileHas("/proc/stb/audio/aac_choices", "downmix")
+ SystemInfo["HDMIAudioSource"] = fileCheck("/proc/stb/hdmi/audio_source")
++SystemInfo["RecoveryMode"] = fileCheck("/proc/stb/fp/boot_mode")
+diff --git a/lib/python/Screens/Standby.py b/lib/python/Screens/Standby.py
+index 89f886559..c8e934ddd 100644
+--- a/lib/python/Screens/Standby.py
++++ b/lib/python/Screens/Standby.py
+@@ -23,7 +23,7 @@
+ QUIT_UPGRADE_FP = 4
+ QUIT_ERROR_RESTART = 5
+ QUIT_DEBUG_RESTART = 6
+-QUIT_MAINT = 16
++QUIT_REBOOT_RECOVERY = 16
+ QUIT_UPGRADE_PROGRAM = 42
+ QUIT_IMAGE_RESTORE = 43
+ 
+@@ -217,6 +217,7 @@
+ 			QUIT_UPGRADE_FP: _("Your frontprocessor will be upgraded\nPlease wait until your receiver reboots\nThis may take a few minutes"),
+ 			QUIT_ERROR_RESTART: _("The user interface of your receiver is restarting\ndue to an error in mytest.py"),
+ 			QUIT_DEBUG_RESTART: _("The user interface of your receiver is restarting in debug mode"),
++			QUIT_REBOOT_RECOVERY: _("Your receiver is rebooting into Recovery Mode"),
+ 			QUIT_UPGRADE_PROGRAM: _("Unattended upgrade in progress\nPlease wait until your receiver reboots\nThis may take a few minutes")
+ 		}.get(retvalue)
+ 		self["text"] = Label(text)
+@@ -256,6 +257,7 @@
+ 				QUIT_RESTART: _("Really restart now?"),
+ 				QUIT_UPGRADE_FP: _("Really upgrade the frontprocessor and reboot now?"),
+ 				QUIT_DEBUG_RESTART: _("Really restart in debug mode now?"),
++				QUIT_REBOOT_RECOVERY: _("Really reboot into Recovery Mode?"),
+ 				QUIT_UPGRADE_PROGRAM: _("Really upgrade your settop box and reboot now?")
+ 			}.get(retvalue, None)
+ 			if text:
+diff --git a/tools/enigma2.sh.in b/tools/enigma2.sh.in
+index 60251ecb5..2ab9874ec 100755
+--- a/tools/enigma2.sh.in
++++ b/tools/enigma2.sh.in
+@@ -90,6 +90,10 @@
+ 		6)
+ 			DEBUG_LVL=4
+ 			;;
++		16)
++			echo "rescue" > /proc/stb/fp/boot_mode
++			/sbin/reboot
++			;;
+ 		42)
+ 			df -P | grep -v "tmpfs " | awk '{print $6}' | tail -n +3 > /tmp/upgrade_mountpoints.txt
+ 			while read line; do

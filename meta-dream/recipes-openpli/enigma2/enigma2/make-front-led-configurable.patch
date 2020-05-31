@@ -1,0 +1,44 @@
+Index: ./data/setup.xml
+--- a/data/setup.xml
++++ b/data/setup.xml
+@@ -207,6 +207,7 @@
+ 		<item text="Contrast">config.osd.contrast</item>
+ 	</setup>
+ 	<setup key="lcd" title="Display setup" requires="FrontpanelDisplay">
++		<item level="0" text="Front LED on" description="Turn on front LED (this needs a restart of enigma2).">config.usage.frontled_on</item>
+ 		<item level="0" text="Clone TV screen to LCD" description="Shows live tv or informations on LCD." requires="LcdLiveTV">config.lcd.showTv</item>
+ 		<item level="0" text="Clone TV screen to LCD mode" description="Selects the mode how live tv should be shown on the LCD." requires="LcdLiveTVMode">config.usage.LcdLiveTVMode</item>
+ 		<item level="2" text="Live decoder" description="Selects video source displayed on the LCD." requires="LcdLiveDecoder">config.usage.LcdLiveDecoder</item>
+Index: ./lib/python/Components/UsageConfig.py
+--- a/lib/python/Components/UsageConfig.py
++++ b/lib/python/Components/UsageConfig.py
+@@ -314,6 +314,8 @@
+ 	config.usage.movielist_unseen = ConfigYesNo(default = False)
+ 
+ 	config.usage.swap_snr_on_osd = ConfigYesNo(default = False)
++	
++	config.usage.frontled_on = ConfigYesNo(default = True)
+ 
+ 	def SpinnerOnOffChanged(configElement):
+ 		setSpinnerOnOff(int(configElement.value))
+Index: ./lib/python/Screens/SessionGlobals.py
+--- a/lib/python/Screens/SessionGlobals.py
++++ b/lib/python/Screens/SessionGlobals.py
+@@ -10,6 +10,7 @@
+ from Components.Sources.HddState import HddState
+ from Components.Converter.Combine import Combine
+ from Components.Renderer.FrontpanelLed import FrontpanelLed
++from Components.config import config
+ 
+ class SessionGlobals(Screen):
+ 	def __init__(self, session):
+@@ -50,3 +51,9 @@
+ 		elif nr_leds == 2:
+ 			FrontpanelLed(which = 0, boolean = False, patterns = [PATTERN_OFF, PATTERN_BLINK, PATTERN_ON, PATTERN_BLINK]).connect(combine)
+ 			FrontpanelLed(which = 1, boolean = False, patterns = [PATTERN_ON, PATTERN_ON, PATTERN_OFF, PATTERN_OFF]).connect(combine)
++			if not config.usage.frontled_on.value:
++				FrontpanelLed(which = 0, boolean = False, patterns = [PATTERN_OFF, PATTERN_BLINK, PATTERN_OFF, PATTERN_BLINK]).connect(combine)
++			else:
++				FrontpanelLed(which = 0, boolean = False, patterns = [PATTERN_ON, PATTERN_BLINK, PATTERN_OFF, PATTERN_BLINK]).connect(combine)
++			FrontpanelLed(which = 1, boolean = False, patterns = [PATTERN_OFF, PATTERN_OFF, PATTERN_OFF, PATTERN_OFF]).connect(combine)
++

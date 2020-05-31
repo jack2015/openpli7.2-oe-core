@@ -1,0 +1,18 @@
+--- a/tests/check/Makefile.am
++++ b/tests/check/Makefile.am
+@@ -258,7 +258,6 @@
+ 	pipelines/streamheader \
+ 	$(check_mssdemux) \
+ 	$(check_dash_demux) \
+-	$(check_ipcpipeline) \
+ 	$(check_neon)
+ 
+ check_PROGRAMS = \
+@@ -305,6 +304,7 @@
+ 	elements/rtpsink \
+ 	elements/id3mux \
+ 	pipelines/mxf \
++	$(check_ipcpipeline) \
+ 	libs/isoff \
+ 	libs/mpegvideoparser \
+ 	libs/mpegts \

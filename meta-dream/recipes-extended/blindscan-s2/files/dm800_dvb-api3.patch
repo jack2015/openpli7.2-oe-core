@@ -1,0 +1,17 @@
+--- a/blindscan-s2.h	2020-05-20 11:56:05.261099000 +0800
++++ b/blindscan-s2.h	2020-05-20 13:06:56.299791051 +0800
+@@ -28,6 +28,14 @@
+ #include <linux/dvb/frontend.h>
+ #include "diseqc.h"
+ 
++#ifndef NO_STREAM_ID_FILTER
++#define NO_STREAM_ID_FILTER    (~0U)
++#endif
++
++#ifndef DTV_STREAM_ID
++#define DTV_STREAM_ID DTV_ISDBS_TS_ID
++#endif
++
+ #define SLEEP_TIME 20000
+ #define HORIZONTAL SEC_VOLTAGE_18
+ #define VERTICAL SEC_VOLTAGE_13
