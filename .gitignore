@@ -7,5 +7,6 @@
 /meta-local/recipes-local/
 !/meta-local/recipes-local/my-image.bb
 *.swp
+site.conf
 bblayers.conf
 *~
